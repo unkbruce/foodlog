@@ -143,7 +143,19 @@ npm run dev
 http://localhost:5173
 ```
 
-Vite 개발 서버는 `/api` 요청을 `http://localhost:3000` 백엔드 서버로 프록시합니다.
+Vite 개발 서버는 `/foods`, `/feedback` 요청을 `http://localhost:3000` 백엔드 서버로 프록시합니다.
+
+---
+
+## 환경 변수
+
+배포 환경에서는 Render 백엔드 API 주소를 `VITE_API_BASE_URL`로 설정합니다. 예시는 [.env.example](.env.example)에서 확인할 수 있습니다.
+
+```bash
+VITE_API_BASE_URL=https://foodlog-api-jz7l.onrender.com
+```
+
+로컬에서 Express 서버와 Vite 개발 서버를 함께 실행하는 경우 환경 변수 없이도 Vite proxy를 통해 API를 호출할 수 있습니다. 실제 `.env` 파일은 각 실행 환경에서 필요할 때만 생성합니다.
 
 ---
 

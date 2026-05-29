@@ -1,4 +1,35 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+const RENDER_API_BASE_URL = 'https://foodlog-api-jz7l.onrender.com'
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL?.trim() || RENDER_API_BASE_URL).replace(/\/$/, '')
+
+const emptyFeedback = {
+  totalCount: 0,
+  totalCalories: 0,
+  categorySummary: {},
+  message: '',
+}
+
+const toSafeNumber = (value) => {
+  const numberValue = Number(value)
+  return Number.isFinite(numberValue) ? numberValue : 0
+}
+
+const toSafeFeedback = (data) => {
+  if (!data || Array.isArray(data) || typeof data !== 'object') {
+    return emptyFeedback
+  }
+
+  const categorySummary =
+    data.categorySummary && !Array.isArray(data.categorySummary) && typeof data.categorySummary === 'object'
+      ? data.categorySummary
+      : {}
+
+  return {
+    totalCount: toSafeNumber(data.totalCount),
+    totalCalories: toSafeNumber(data.totalCalories),
+    categorySummary,
+    message: typeof data.message === 'string' ? data.message : '',
+  }
+}
 
 async function requestJson(path, options = {}) {
   const headers = {
@@ -26,8 +57,9 @@ async function requestJson(path, options = {}) {
   return data
 }
 
-export function fetchFoods() {
-  return requestJson('/foods')
+export async function fetchFoods() {
+  const data = await requestJson('/foods')
+  return Array.isArray(data) ? data : []
 }
 
 export function fetchFoodById(id) {
@@ -54,6 +86,7 @@ export function deleteFood(id) {
   })
 }
 
-export function fetchFeedback() {
-  return requestJson('/feedback')
+export async function fetchFeedback() {
+  const data = await requestJson('/feedback')
+  return toSafeFeedback(data)
 }

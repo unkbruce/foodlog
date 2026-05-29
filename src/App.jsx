@@ -16,6 +16,11 @@ const emptyForm = {
   memo: '',
 }
 
+const toFoodArray = (value) => (Array.isArray(value) ? value : [])
+
+const toFeedbackObject = (value) =>
+  value && !Array.isArray(value) && typeof value === 'object' ? value : null
+
 function App() {
   const [screen, setScreen] = useState('list')
   const [foods, setFoods] = useState([])
@@ -33,7 +38,7 @@ function App() {
 
     try {
       const foodList = await fetchFoods()
-      setFoods(foodList)
+      setFoods(toFoodArray(foodList))
     } catch (error) {
       setListError(error.message)
     } finally {
@@ -46,7 +51,7 @@ function App() {
 
     fetchFoods()
       .then((foodList) => {
-        if (isActive) setFoods(foodList)
+        if (isActive) setFoods(toFoodArray(foodList))
       })
       .catch((error) => {
         if (isActive) setListError(error.message)
@@ -166,7 +171,8 @@ function App() {
 }
 
 function FoodList({ foods, isLoading, error, onRetry, onAdd, onFeedback, onSelect }) {
-  const totalCalories = foods.reduce((sum, food) => sum + Number(food.calories), 0)
+  const safeFoods = toFoodArray(foods)
+  const totalCalories = safeFoods.reduce((sum, food) => sum + Number(food.calories), 0)
 
   return (
     <section className="screen-section">
@@ -174,7 +180,7 @@ function FoodList({ foods, isLoading, error, onRetry, onAdd, onFeedback, onSelec
         <div>
           <h1>오늘의 음식 기록</h1>
           <p>
-            {foods.length}개 기록 · {totalCalories} kcal
+            {safeFoods.length}개 기록 · {totalCalories} kcal
           </p>
         </div>
         <div className="button-row compact-actions">
@@ -192,13 +198,13 @@ function FoodList({ foods, isLoading, error, onRetry, onAdd, onFeedback, onSelec
 
       {!isLoading && !error && (
         <div className="food-list" aria-label="음식 기록 목록">
-          {foods.length === 0 ? (
+          {safeFoods.length === 0 ? (
             <div className="empty-state">
               <h2>아직 기록이 없습니다</h2>
               <p>먹은 음식을 추가하면 이곳에 목록이 표시됩니다.</p>
             </div>
           ) : (
-            foods.map((food) => (
+            safeFoods.map((food) => (
               <button
                 key={food.id}
                 type="button"
@@ -393,7 +399,7 @@ function FoodFeedback({ onBack }) {
 
     try {
       const feedbackData = await fetchFeedback()
-      setFeedback(feedbackData)
+      setFeedback(toFeedbackObject(feedbackData))
     } catch (apiError) {
       setError(apiError.message)
     } finally {
@@ -406,7 +412,7 @@ function FoodFeedback({ onBack }) {
 
     fetchFeedback()
       .then((feedbackData) => {
-        if (isActive) setFeedback(feedbackData)
+        if (isActive) setFeedback(toFeedbackObject(feedbackData))
       })
       .catch((apiError) => {
         if (isActive) setError(apiError.message)
@@ -420,7 +426,13 @@ function FoodFeedback({ onBack }) {
     }
   }, [])
 
-  const categorySummary = Object.entries(feedback?.categorySummary || {})
+  const feedbackView = toFeedbackObject(feedback)
+  const categorySummarySource = feedbackView?.categorySummary
+  const categorySummary = Object.entries(
+    categorySummarySource && !Array.isArray(categorySummarySource) && typeof categorySummarySource === 'object'
+      ? categorySummarySource
+      : {},
+  )
 
   return (
     <section className="screen-section">
@@ -432,11 +444,11 @@ function FoodFeedback({ onBack }) {
       {isLoading && <StatusMessage message="식단 피드백을 불러오는 중입니다." />}
       {error && <StatusMessage type="error" message={error} onRetry={loadFeedback} />}
 
-      {!isLoading && !error && feedback && (
+      {!isLoading && !error && feedbackView && (
         <>
           <div className="summary-grid">
-            <SummaryBox label="총 기록 수" value={String(feedback.totalCount)} unit="개" />
-            <SummaryBox label="총 칼로리" value={String(feedback.totalCalories)} unit="kcal" />
+            <SummaryBox label="총 기록 수" value={String(feedbackView.totalCount)} unit="개" />
+            <SummaryBox label="총 칼로리" value={String(feedbackView.totalCalories)} unit="kcal" />
           </div>
 
           <div className="panel-block">
@@ -456,7 +468,7 @@ function FoodFeedback({ onBack }) {
 
           <div className="panel-block feedback-message">
             <h2>피드백</h2>
-            <p>{feedback.message}</p>
+            <p>{feedbackView.message}</p>
           </div>
         </>
       )}

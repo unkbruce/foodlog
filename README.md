@@ -209,6 +209,8 @@ Render Web Service를 통해 Express API 서버를 배포했습니다.
 
 > Render 무료 인스턴스는 일정 시간 요청이 없으면 sleep 상태가 될 수 있으며, 첫 요청 시 응답이 지연될 수 있습니다.
 
+Firebase Hosting 배포 주소와 로컬 개발 주소를 CORS 허용 origin에 추가했습니다.
+
 예상 배포 구조는 다음과 같습니다.
 
 ```txt

@@ -1,8 +1,27 @@
+import cors from 'cors';
 import express from 'express';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://planning-with-ai-f6aa8.web.app',
+];
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error('Not allowed by CORS'));
+  },
+};
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
 // FoodLog MVP stores data in memory. Data resets when the server restarts.

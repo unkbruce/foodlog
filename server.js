@@ -55,22 +55,22 @@ const parseFoodId = (idParam) => {
 const findFoodById = (id) => foodList.find((item) => item.id === id);
 
 const validateCreateFood = ({ name, category, calories }) => {
-  if (isBlank(name)) return 'name is required';
-  if (isBlank(category)) return 'category is required';
+  if (isBlank(name)) return '음식 이름을 입력해주세요.';
+  if (isBlank(category)) return '카테고리를 입력해주세요.';
   if (calories === undefined || calories === null || calories === '') {
-    return 'calories is required';
+    return '칼로리를 입력해주세요.';
   }
-  if (toValidCalories(calories) === null) return 'calories must be a number';
+  if (toValidCalories(calories) === null) return '칼로리는 숫자로 입력해주세요.';
   return null;
 };
 
 const validateUpdateFood = ({ name, category, calories, memo }) => {
-  if (name !== undefined && isBlank(name)) return 'name must not be empty';
-  if (category !== undefined && isBlank(category)) return 'category must not be empty';
+  if (name !== undefined && isBlank(name)) return '음식 이름은 비워둘 수 없습니다.';
+  if (category !== undefined && isBlank(category)) return '카테고리는 비워둘 수 없습니다.';
   if (calories !== undefined && toValidCalories(calories) === null) {
-    return 'calories must be a number';
+    return '칼로리는 숫자로 입력해주세요.';
   }
-  if (memo !== undefined && typeof memo !== 'string') return 'memo must be a string';
+  if (memo !== undefined && typeof memo !== 'string') return '메모는 문자로 입력해주세요.';
   return null;
 };
 
@@ -106,7 +106,7 @@ app.get('/foods/:id', (req, res) => {
   const food = id ? findFoodById(id) : null;
 
   if (!food) {
-    return sendError(res, 404, 'Food not found');
+    return sendError(res, 404, '음식 기록을 찾을 수 없습니다.');
   }
 
   res.json(food);
@@ -142,7 +142,7 @@ app.put('/foods/:id', (req, res) => {
   const food = id ? findFoodById(id) : null;
 
   if (!food) {
-    return sendError(res, 404, 'Food not found');
+    return sendError(res, 404, '음식 기록을 찾을 수 없습니다.');
   }
 
   const { name, category, calories, memo } = req.body;
@@ -166,13 +166,13 @@ app.delete('/foods/:id', (req, res) => {
   const foodIndex = id ? foodList.findIndex((item) => item.id === id) : -1;
 
   if (foodIndex === -1) {
-    return sendError(res, 404, 'Food not found');
+    return sendError(res, 404, '음식 기록을 찾을 수 없습니다.');
   }
 
   const [deletedFood] = foodList.splice(foodIndex, 1);
 
   res.json({
-    message: 'Food deleted',
+    message: '음식 기록이 삭제되었습니다.',
     food: deletedFood,
   });
 });

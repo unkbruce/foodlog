@@ -1,32 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import {
+  createFood,
+  deleteFood,
+  fetchFeedback,
+  fetchFoodById,
+  fetchFoods,
+  updateFood,
+} from './api/foods'
 import './App.css'
-
-const initialFoods = [
-  {
-    id: 1,
-    name: '사과',
-    category: '과일',
-    calories: 95,
-    memo: '오후 간식으로 먹음',
-    createdAt: '2026-05-29 11:09',
-  },
-  {
-    id: 2,
-    name: '밥',
-    category: '곡류',
-    calories: 206,
-    memo: '점심으로 먹음',
-    createdAt: '2026-05-29 12:30',
-  },
-  {
-    id: 3,
-    name: '달걀',
-    category: '단백질',
-    calories: 78,
-    memo: '아침으로 먹음',
-    createdAt: '2026-05-29 08:15',
-  },
-]
 
 const emptyForm = {
   name: '',
@@ -37,19 +18,107 @@ const emptyForm = {
 
 function App() {
   const [screen, setScreen] = useState('list')
-  const [foods, setFoods] = useState(initialFoods)
+  const [foods, setFoods] = useState([])
   const [selectedFoodId, setSelectedFoodId] = useState(null)
+  const [selectedFood, setSelectedFood] = useState(null)
+  const [isListLoading, setIsListLoading] = useState(true)
+  const [isDetailLoading, setIsDetailLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [listError, setListError] = useState('')
+  const [detailError, setDetailError] = useState('')
 
-  const selectedFood = foods.find((food) => food.id === selectedFoodId)
+  const loadFoods = async () => {
+    setIsListLoading(true)
+    setListError('')
+
+    try {
+      const foodList = await fetchFoods()
+      setFoods(foodList)
+    } catch (error) {
+      setListError(error.message)
+    } finally {
+      setIsListLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    let isActive = true
+
+    fetchFoods()
+      .then((foodList) => {
+        if (isActive) setFoods(foodList)
+      })
+      .catch((error) => {
+        if (isActive) setListError(error.message)
+      })
+      .finally(() => {
+        if (isActive) setIsListLoading(false)
+      })
+
+    return () => {
+      isActive = false
+    }
+  }, [])
 
   const goToList = () => {
     setScreen('list')
     setSelectedFoodId(null)
+    setSelectedFood(null)
+    setDetailError('')
   }
 
-  const openDetail = (foodId) => {
-    setSelectedFoodId(foodId)
+  const openDetail = async (foodId) => {
     setScreen('detail')
+    setSelectedFoodId(foodId)
+    setSelectedFood(null)
+    setDetailError('')
+    setIsDetailLoading(true)
+
+    try {
+      const food = await fetchFoodById(foodId)
+      setSelectedFood(food)
+    } catch (error) {
+      setDetailError(error.message)
+    } finally {
+      setIsDetailLoading(false)
+    }
+  }
+
+  const handleCreateFood = async (foodData) => {
+    setIsSaving(true)
+
+    try {
+      await createFood(foodData)
+      await loadFoods()
+      goToList()
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleUpdateFood = async (foodData) => {
+    setIsSaving(true)
+
+    try {
+      const updatedFood = await updateFood(selectedFoodId, foodData)
+      setSelectedFood(updatedFood)
+      await loadFoods()
+      return updatedFood
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDeleteFood = async () => {
+    setIsSaving(true)
+
+    try {
+      await deleteFood(selectedFoodId)
+      await loadFoods()
+      goToList()
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -62,6 +131,9 @@ function App() {
       {screen === 'list' && (
         <FoodList
           foods={foods}
+          isLoading={isListLoading}
+          error={listError}
+          onRetry={loadFoods}
           onAdd={() => setScreen('add')}
           onFeedback={() => setScreen('feedback')}
           onSelect={openDetail}
@@ -70,40 +142,30 @@ function App() {
 
       {screen === 'add' && (
         <FoodAdd
+          isSaving={isSaving}
           onCancel={goToList}
-          onCreate={(food) => {
-            setFoods((currentFoods) => [food, ...currentFoods])
-            goToList()
-          }}
+          onCreate={handleCreateFood}
         />
       )}
 
       {screen === 'detail' && (
         <FoodDetail
           food={selectedFood}
+          isLoading={isDetailLoading}
+          isSaving={isSaving}
+          error={detailError}
           onBack={goToList}
-          onSave={(updatedFood) => {
-            setFoods((currentFoods) =>
-              currentFoods.map((food) =>
-                food.id === updatedFood.id ? updatedFood : food,
-              ),
-            )
-          }}
-          onDelete={(foodId) => {
-            setFoods((currentFoods) =>
-              currentFoods.filter((food) => food.id !== foodId),
-            )
-            goToList()
-          }}
+          onSave={handleUpdateFood}
+          onDelete={handleDeleteFood}
         />
       )}
 
-      {screen === 'feedback' && <FoodFeedback foods={foods} onBack={goToList} />}
+      {screen === 'feedback' && <FoodFeedback onBack={goToList} />}
     </main>
   )
 }
 
-function FoodList({ foods, onAdd, onFeedback, onSelect }) {
+function FoodList({ foods, isLoading, error, onRetry, onAdd, onFeedback, onSelect }) {
   const totalCalories = foods.reduce((sum, food) => sum + Number(food.calories), 0)
 
   return (
@@ -125,61 +187,69 @@ function FoodList({ foods, onAdd, onFeedback, onSelect }) {
         </div>
       </div>
 
-      <div className="food-list" aria-label="음식 기록 목록">
-        {foods.length === 0 ? (
-          <div className="empty-state">
-            <h2>아직 기록이 없습니다</h2>
-            <p>먹은 음식을 추가하면 이곳에 목록이 표시됩니다.</p>
-          </div>
-        ) : (
-          foods.map((food) => (
-            <button
-              key={food.id}
-              type="button"
-              className="food-card"
-              onClick={() => onSelect(food.id)}
-            >
-              <span className="food-card-main">
-                <strong>{food.name}</strong>
-                <span>
-                  {food.category} / {food.calories} kcal
+      {isLoading && <StatusMessage message="음식 기록을 불러오는 중입니다." />}
+      {error && <StatusMessage type="error" message={error} onRetry={onRetry} />}
+
+      {!isLoading && !error && (
+        <div className="food-list" aria-label="음식 기록 목록">
+          {foods.length === 0 ? (
+            <div className="empty-state">
+              <h2>아직 기록이 없습니다</h2>
+              <p>먹은 음식을 추가하면 이곳에 목록이 표시됩니다.</p>
+            </div>
+          ) : (
+            foods.map((food) => (
+              <button
+                key={food.id}
+                type="button"
+                className="food-card"
+                onClick={() => onSelect(food.id)}
+              >
+                <span className="food-card-main">
+                  <strong>{food.name}</strong>
+                  <span>
+                    {food.category} / {food.calories} kcal
+                  </span>
                 </span>
-              </span>
-              <span className="food-card-memo">{food.memo || '메모 없음'}</span>
-              <span className="food-card-date">{food.createdAt}</span>
-            </button>
-          ))
-        )}
-      </div>
+                <span className="food-card-memo">{food.memo || '메모 없음'}</span>
+                <span className="food-card-date">{formatFoodDate(food.createdAt)}</span>
+              </button>
+            ))
+          )}
+        </div>
+      )}
     </section>
   )
 }
 
-function FoodAdd({ onCancel, onCreate }) {
+function FoodAdd({ isSaving, onCancel, onCreate }) {
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
 
   const updateForm = (field, value) => {
     setForm((currentForm) => ({ ...currentForm, [field]: value }))
+    setError('')
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
-    // 실제 API 연동 전까지는 화면에서 최소 입력 검증만 처리합니다.
+    // 서버에도 검증이 있지만, 사용자가 바로 알 수 있도록 화면에서 먼저 확인합니다.
     if (!form.name.trim() || !form.category.trim() || !form.calories) {
       setError('음식 이름, 카테고리, 칼로리는 꼭 입력해주세요.')
       return
     }
 
-    onCreate({
-      id: Date.now(),
-      name: form.name.trim(),
-      category: form.category.trim(),
-      calories: Number(form.calories),
-      memo: form.memo.trim(),
-      createdAt: formatNow(),
-    })
+    try {
+      await onCreate({
+        name: form.name.trim(),
+        category: form.category.trim(),
+        calories: Number(form.calories),
+        memo: form.memo.trim(),
+      })
+    } catch (apiError) {
+      setError(apiError.message)
+    }
   }
 
   return (
@@ -191,7 +261,8 @@ function FoodAdd({ onCancel, onCreate }) {
       <FoodForm
         form={form}
         error={error}
-        submitLabel="저장하기"
+        submitLabel={isSaving ? '저장 중...' : '저장하기'}
+        disabled={isSaving}
         onChange={updateForm}
         onSubmit={handleSubmit}
         onCancel={onCancel}
@@ -200,24 +271,21 @@ function FoodAdd({ onCancel, onCreate }) {
   )
 }
 
-function FoodDetail({ food, onBack, onSave, onDelete }) {
-  const [form, setForm] = useState(() =>
-    food
-      ? {
-          name: food.name,
-          category: food.category,
-          calories: String(food.calories),
-          memo: food.memo,
-        }
-      : emptyForm,
-  )
-  const [error, setError] = useState('')
-  const [savedMessage, setSavedMessage] = useState('')
-
-  if (!food) {
+function FoodDetail({ food, isLoading, isSaving, error, onBack, onSave, onDelete }) {
+  if (isLoading) {
     return (
       <section className="screen-section">
-        <ScreenTitle title="음식 기록 상세" description="선택한 기록을 찾을 수 없습니다." />
+        <ScreenTitle title="음식 기록 상세" description="선택한 기록을 불러오고 있습니다." />
+        <StatusMessage message="상세 정보를 불러오는 중입니다." />
+      </section>
+    )
+  }
+
+  if (error || !food) {
+    return (
+      <section className="screen-section">
+        <ScreenTitle title="음식 기록 상세" description="선택한 기록을 확인할 수 없습니다." />
+        <StatusMessage type="error" message={error || '선택한 기록을 찾을 수 없습니다.'} />
         <button type="button" className="secondary-button full-button" onClick={onBack}>
           목록으로
         </button>
@@ -225,28 +293,61 @@ function FoodDetail({ food, onBack, onSave, onDelete }) {
     )
   }
 
+  return (
+    <FoodDetailForm
+      key={food.id}
+      food={food}
+      isSaving={isSaving}
+      onBack={onBack}
+      onSave={onSave}
+      onDelete={onDelete}
+    />
+  )
+}
+
+function FoodDetailForm({ food, isSaving, onBack, onSave, onDelete }) {
+  const [form, setForm] = useState({
+    name: food.name,
+    category: food.category,
+    calories: String(food.calories),
+    memo: food.memo || '',
+  })
+  const [formError, setFormError] = useState('')
+  const [savedMessage, setSavedMessage] = useState('')
+
   const updateForm = (field, value) => {
     setForm((currentForm) => ({ ...currentForm, [field]: value }))
+    setFormError('')
     setSavedMessage('')
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
     if (!form.name.trim() || !form.category.trim() || !form.calories) {
-      setError('음식 이름, 카테고리, 칼로리는 꼭 입력해주세요.')
+      setFormError('음식 이름, 카테고리, 칼로리는 꼭 입력해주세요.')
       return
     }
 
-    onSave({
-      ...food,
-      name: form.name.trim(),
-      category: form.category.trim(),
-      calories: Number(form.calories),
-      memo: form.memo.trim(),
-    })
-    setError('')
-    setSavedMessage('수정 내용이 mock 데이터에 반영되었습니다.')
+    try {
+      await onSave({
+        name: form.name.trim(),
+        category: form.category.trim(),
+        calories: Number(form.calories),
+        memo: form.memo.trim(),
+      })
+      setSavedMessage('수정 내용이 서버 데이터에 반영되었습니다.')
+    } catch (apiError) {
+      setFormError(apiError.message)
+    }
+  }
+
+  const handleDelete = async () => {
+    try {
+      await onDelete()
+    } catch (apiError) {
+      setFormError(apiError.message)
+    }
   }
 
   return (
@@ -257,12 +358,13 @@ function FoodDetail({ food, onBack, onSave, onDelete }) {
       />
       <div className="detail-meta">
         <span>ID {food.id}</span>
-        <span>기록 일시 {food.createdAt}</span>
+        <span>기록 일시 {formatFoodDate(food.createdAt)}</span>
       </div>
       <FoodForm
         form={form}
-        error={error || savedMessage}
-        submitLabel="저장하기"
+        error={formError || savedMessage}
+        submitLabel={isSaving ? '저장 중...' : '저장하기'}
+        disabled={isSaving}
         onChange={updateForm}
         onSubmit={handleSubmit}
         onCancel={onBack}
@@ -271,48 +373,93 @@ function FoodDetail({ food, onBack, onSave, onDelete }) {
       <button
         type="button"
         className="danger-button full-button"
-        onClick={() => onDelete(food.id)}
+        disabled={isSaving}
+        onClick={handleDelete}
       >
-        삭제
+        {isSaving ? '처리 중...' : '삭제'}
       </button>
     </section>
   )
 }
 
-function FoodFeedback({ foods, onBack }) {
-  const feedback = useMemo(() => buildFeedback(foods), [foods])
+function FoodFeedback({ onBack }) {
+  const [feedback, setFeedback] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const loadFeedback = async () => {
+    setIsLoading(true)
+    setError('')
+
+    try {
+      const feedbackData = await fetchFeedback()
+      setFeedback(feedbackData)
+    } catch (apiError) {
+      setError(apiError.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    let isActive = true
+
+    fetchFeedback()
+      .then((feedbackData) => {
+        if (isActive) setFeedback(feedbackData)
+      })
+      .catch((apiError) => {
+        if (isActive) setError(apiError.message)
+      })
+      .finally(() => {
+        if (isActive) setIsLoading(false)
+      })
+
+    return () => {
+      isActive = false
+    }
+  }, [])
+
+  const categorySummary = Object.entries(feedback?.categorySummary || {})
 
   return (
     <section className="screen-section">
       <ScreenTitle
         title="식단 피드백"
-        description="현재 기록을 기준으로 간단한 규칙 기반 피드백을 보여줍니다."
+        description="서버의 규칙 기반 피드백을 보여줍니다."
       />
 
-      <div className="summary-grid">
-        <SummaryBox label="총 기록 수" value={String(feedback.totalCount)} unit="개" />
-        <SummaryBox label="총 칼로리" value={String(feedback.totalCalories)} unit="kcal" />
-      </div>
+      {isLoading && <StatusMessage message="식단 피드백을 불러오는 중입니다." />}
+      {error && <StatusMessage type="error" message={error} onRetry={loadFeedback} />}
 
-      <div className="panel-block">
-        <h2>카테고리 요약</h2>
-        {feedback.categorySummary.length === 0 ? (
-          <p>아직 카테고리 기록이 없습니다.</p>
-        ) : (
-          <div className="category-list">
-            {feedback.categorySummary.map(([category, count]) => (
-              <span key={category}>
-                {category}: {count}
-              </span>
-            ))}
+      {!isLoading && !error && feedback && (
+        <>
+          <div className="summary-grid">
+            <SummaryBox label="총 기록 수" value={String(feedback.totalCount)} unit="개" />
+            <SummaryBox label="총 칼로리" value={String(feedback.totalCalories)} unit="kcal" />
           </div>
-        )}
-      </div>
 
-      <div className="panel-block feedback-message">
-        <h2>피드백</h2>
-        <p>{feedback.message}</p>
-      </div>
+          <div className="panel-block">
+            <h2>카테고리 요약</h2>
+            {categorySummary.length === 0 ? (
+              <p>아직 카테고리 기록이 없습니다.</p>
+            ) : (
+              <div className="category-list">
+                {categorySummary.map(([category, count]) => (
+                  <span key={category}>
+                    {category}: {count}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="panel-block feedback-message">
+            <h2>피드백</h2>
+            <p>{feedback.message}</p>
+          </div>
+        </>
+      )}
 
       <button type="button" className="secondary-button full-button" onClick={onBack}>
         목록으로
@@ -325,6 +472,7 @@ function FoodForm({
   form,
   error,
   submitLabel,
+  disabled = false,
   onChange,
   onSubmit,
   onCancel,
@@ -336,6 +484,7 @@ function FoodForm({
         음식 이름
         <input
           value={form.name}
+          disabled={disabled}
           onChange={(event) => onChange('name', event.target.value)}
           placeholder="예: 사과"
         />
@@ -344,6 +493,7 @@ function FoodForm({
         카테고리
         <input
           value={form.category}
+          disabled={disabled}
           onChange={(event) => onChange('category', event.target.value)}
           placeholder="예: 과일"
         />
@@ -354,6 +504,7 @@ function FoodForm({
           type="number"
           min="0"
           value={form.calories}
+          disabled={disabled}
           onChange={(event) => onChange('calories', event.target.value)}
           placeholder="예: 95"
         />
@@ -362,6 +513,7 @@ function FoodForm({
         메모
         <textarea
           value={form.memo}
+          disabled={disabled}
           onChange={(event) => onChange('memo', event.target.value)}
           placeholder="식사 상황이나 간단한 메모"
           rows="4"
@@ -371,10 +523,10 @@ function FoodForm({
       {error && <p className="form-message">{error}</p>}
 
       <div className="button-row">
-        <button type="submit" className="primary-button">
+        <button type="submit" className="primary-button" disabled={disabled}>
           {submitLabel}
         </button>
-        <button type="button" className="secondary-button" onClick={onCancel}>
+        <button type="button" className="secondary-button" disabled={disabled} onClick={onCancel}>
           {cancelLabel}
         </button>
       </div>
@@ -402,38 +554,23 @@ function SummaryBox({ label, value, unit }) {
   )
 }
 
-function buildFeedback(foods) {
-  const totalCount = foods.length
-  const totalCalories = foods.reduce((sum, food) => sum + Number(food.calories), 0)
-  const categoryCounts = foods.reduce((counts, food) => {
-    counts[food.category] = (counts[food.category] || 0) + 1
-    return counts
-  }, {})
-  const categorySummary = Object.entries(categoryCounts)
-  const mostRepeatedCategory = categorySummary.find(([, count]) => count >= 3)
-
-  let message = '다양한 카테고리의 음식이 기록되어 있습니다. 꾸준히 식사 후 기록해보세요.'
-
-  if (totalCount < 3) {
-    message = '아직 기록이 적습니다. 식사 후 꾸준히 기록하면 더 참고하기 좋은 피드백을 볼 수 있습니다.'
-  } else if (totalCalories >= 2000) {
-    message = '오늘 섭취 칼로리가 높은 편입니다. 다음 식사는 조금 가볍게 구성해보세요.'
-  } else if (mostRepeatedCategory) {
-    message = `${mostRepeatedCategory[0]} 카테고리에 기록이 집중되어 있습니다. 다양한 음식을 함께 기록해보세요.`
-  }
-
-  return { totalCount, totalCalories, categorySummary, message }
+function StatusMessage({ type = 'info', message, onRetry }) {
+  return (
+    <div className={`status-message ${type}`}>
+      <p>{message}</p>
+      {onRetry && (
+        <button type="button" className="secondary-button" onClick={onRetry}>
+          다시 시도
+        </button>
+      )}
+    </div>
+  )
 }
 
-function formatNow() {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  const hours = String(now.getHours()).padStart(2, '0')
-  const minutes = String(now.getMinutes()).padStart(2, '0')
+function formatFoodDate(value) {
+  if (!value) return '-'
 
-  return `${year}-${month}-${day} ${hours}:${minutes}`
+  return value.replace('T', ' ').slice(0, 16)
 }
 
 export default App

@@ -313,3 +313,50 @@ textarea:focus-visible {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+.section-heading h1,
+.screen-title h1 {
+  color: #172119;
+  font-weight: 800;
+}
+
+.app-subtitle,
+.section-heading p,
+.screen-title p {
+  color: #4f5d52;
+}
+
+.status-message {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.status-message p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.status-message.error {
+  border-color: #f1c7c1;
+  background: var(--danger-bg);
+}
+
+.status-message.error p {
+  color: #84332d;
+  font-weight: 700;
+}
+
+button:disabled,
+input:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}

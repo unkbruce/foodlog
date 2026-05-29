@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoodLog 와이어프레임</title>
+  <style>
+    :root { --green:#15803d; --green-dark:#166534; --green-light:#dcfce7; --ink:#1f2937; --line:#d1d5db; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#eef2f0; color:var(--ink); font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo",Arial,sans-serif; line-height:1.7; }
+    .page { width:210mm; min-height:297mm; margin:0 auto; background:#fff; padding:18mm; }
+    .cover { border-top:8px solid var(--green); padding:18mm 0 12mm; margin-bottom:10mm; }
+    .eyebrow { color:var(--green-dark); font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    h1 { margin:8px 0 10px; color:#111827; font-size:34px; line-height:1.2; letter-spacing:0; }
+    .subtitle { max-width:150mm; color:#374151; font-size:15px; margin:0; }
+    .meta-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:18px; }
+    .meta { border:1px solid #bbf7d0; background:#f0fdf4; border-radius:8px; padding:10px 12px; }
+    .meta strong { display:block; color:var(--green-dark); font-size:12px; margin-bottom:2px; }
+    .print-note { margin-top: 14px; color: #4b5563; font-size: 12px; }
+    h2 { margin:26px 0 10px; padding-bottom:6px; border-bottom:2px solid var(--green-light); color:#111827; font-size:21px; page-break-after:avoid; }
+    h3 { margin:20px 0 8px; color:var(--green-dark); font-size:16px; page-break-after:avoid; }
+    p { margin:8px 0; }
+    .summary-card { border-left:5px solid var(--green); background:#f0fdf4; border-radius:8px; padding:14px 16px; margin:14px 0 18px; page-break-inside:avoid; }
+    .summary-card strong { display:block; color:var(--green-dark); margin-bottom:4px; }
+    table { width:100%; border-collapse:collapse; margin:10px 0 18px; font-size:13px; page-break-inside:avoid; }
+    th,td { border:1px solid var(--line); padding:8px 10px; vertical-align:top; word-break:keep-all; }
+    th { background:var(--green-light); color:var(--green-dark); font-weight:800; }
+    tr:nth-child(even) td { background:#fafafa; }
+    pre {
+      width:fit-content;
+      max-width:100%;
+      margin:12px auto 20px;
+      padding:12px 18px;
+      border:1px solid #bbf7d0;
+      border-radius:8px;
+      background:#f8fafc;
+      color:#111827;
+      font-family:"D2Coding","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+      font-size:13px;
+      line-height:1.5;
+      white-space:pre;
+      word-break:normal;
+      overflow-wrap:normal;
+      tab-size:2;
+      overflow-x:auto;
+      page-break-inside:avoid;
+    }
+    .wireframe-phone {
+      width:320px;
+      max-width:100%;
+      margin:12px auto 20px;
+      border:1px solid #86efac;
+      border-radius:22px;
+      background:#eef2f0;
+      overflow:hidden;
+      box-shadow:0 8px 18px rgba(21,128,61,.08);
+      page-break-inside:avoid;
+    }
+    .wf-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid #bbf7d0;
+      background:#dcfce7;
+      color:var(--green-dark);
+      font-size:15px;
+      font-weight:800;
+      padding:12px 14px;
+    }
+    .wf-header::after {
+      content:"Web";
+      border:1px solid #86efac;
+      border-radius:999px;
+      background:#f0fdf4;
+      color:#15803d;
+      font-size:10px;
+      font-weight:800;
+      line-height:1;
+      padding:4px 7px;
+    }
+    .wf-screen {
+      background:#f8fafc;
+      padding:14px;
+    }
+    .wf-title {
+      color:#111827;
+      font-size:17px;
+      font-weight:800;
+      line-height:1.35;
+      margin:0 0 10px;
+    }
+    .wf-actions {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px;
+      margin:8px 0 12px;
+    }
+    .wf-actions.three {
+      grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+    .wf-actions.single {
+      grid-template-columns:1fr;
+    }
+    .wf-button {
+      display:block;
+      width:100%;
+      border:1px solid #86efac;
+      border-radius:999px;
+      background:#dcfce7;
+      color:var(--green-dark);
+      font:inherit;
+      font-size:12px;
+      font-weight:800;
+      line-height:1.35;
+      padding:8px 9px;
+      text-align:center;
+      word-break:keep-all;
+    }
+    .wf-button.secondary {
+      background:#f0fdf4;
+    }
+    .wf-list {
+      display:grid;
+      gap:9px;
+    }
+    .wf-card,
+    .wf-field,
+    .wf-info,
+    .wf-feedback {
+      border:1px solid #d1d5db;
+      border-radius:10px;
+      background:#fff;
+      padding:11px 12px;
+    }
+    .wf-card {
+      border-left:4px solid #86efac;
+      box-shadow:0 2px 8px rgba(17,24,39,.04);
+    }
+    .wf-card-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:5px;
+    }
+    .wf-card strong,
+    .wf-field label,
+    .wf-info strong,
+    .wf-feedback strong {
+      display:block;
+      color:#111827;
+      font-size:14px;
+      font-weight:800;
+      line-height:1.4;
+    }
+    .wf-badge {
+      border-radius:999px;
+      background:#ecfdf5;
+      color:#166534;
+      font-size:11px;
+      font-weight:800;
+      line-height:1.2;
+      padding:4px 7px;
+      white-space:nowrap;
+    }
+    .wf-kcal {
+      display:block;
+      color:#374151;
+      font-size:13px;
+      font-weight:700;
+      line-height:1.45;
+    }
+    .wf-note,
+    .wf-feedback span {
+      display:block;
+      color:#4b5563;
+      font-size:12px;
+      line-height:1.5;
+      margin-top:3px;
+    }
+    .wf-form {
+      display:grid;
+      gap:9px;
+    }
+    .wf-field label {
+      margin-bottom:6px;
+    }
+    .wf-input {
+      min-height:36px;
+      border:1px solid #bbf7d0;
+      border-radius:8px;
+      background:#f9fafb;
+      color:#111827;
+      font-size:13px;
+      line-height:1.45;
+      padding:8px 10px;
+    }
+    .wf-input.multiline {
+      min-height:54px;
+    }
+    .wf-info-grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px;
+      margin-bottom:9px;
+    }
+    .wf-info-grid .wf-info:last-child {
+      grid-column:1 / -1;
+    }
+    .wf-info {
+      border-color:#bbf7d0;
+      background:#fff;
+    }
+    .wf-info strong {
+      color:var(--green-dark);
+      font-size:12px;
+      margin-bottom:4px;
+    }
+    .wf-info span {
+      display:block;
+      color:#111827;
+      font-size:13px;
+      font-weight:700;
+      line-height:1.45;
+    }
+    .wf-feedback {
+      border-color:#86efac;
+      background:#f0fdf4;
+      margin-bottom:10px;
+    }
+    .wf-feedback strong {
+      color:var(--green-dark);
+      margin-bottom:5px;
+    }
+    @page { size:A4; margin:12mm; }
+    @media print {
+      html,body { background:#fff; }
+      .page { width:auto; min-height:auto; margin:0; padding:0; }
+      .cover,.summary-card,th,tr:nth-child(even) td,.meta,pre,
+      .wireframe-phone,.wf-header,.wf-screen,.wf-title,.wf-button,.wf-card,.wf-field,.wf-info,.wf-feedback,.wf-input,.wf-badge {
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+      }
+      .print-note { display: none; }
+      h2,h3,table,.summary-card,pre,.wireframe-phone { page-break-inside:avoid; }
+      pre { overflow:visible; white-space:pre; font-size:12.5px; line-height:1.5; }
+      .wireframe-phone { box-shadow:none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="cover">
+      <div class="eyebrow">Wireframe Document</div>
+      <h1>FoodLog 와이어프레임</h1>
+      <p class="subtitle">FoodLog 웹 서비스의 주요 화면 구조와 화면 이동 흐름을 모바일 우선 관점에서 와이어프레임 형태로 정리한 문서입니다.</p>
+      <div class="meta-grid">
+        <div class="meta"><strong>프로젝트명</strong>FoodLog</div>
+        <div class="meta"><strong>화면 기준</strong>모바일 화면</div>
+        <div class="meta"><strong>주요 화면</strong>목록, 추가, 상세, 피드백</div>
+      </div>
+      <p class="print-note">PDF 저장 시 브라우저 인쇄 설정에서 머리글과 바닥글을 끄면 문서 본문만 깔끔하게 출력됩니다.</p>
+    </header>
+
+    <section class="summary-card">
+      <strong>핵심 요약</strong>
+      FoodLog는 PC와 모바일 브라우저에서 사용할 수 있는 웹 서비스이며, 초기 화면 설계는 모바일 사용성을 우선하여 구성한다. 화면 구조는 음식 기록 목록을 중심으로 음식 추가, 상세/수정, 식단 피드백 화면으로 이동하는 단순한 구조이다.
+    </section>
+
+    <h2>1. 문서 개요</h2>
+    <table>
+      <tr><th>항목</th><th>내용</th></tr>
+      <tr><td>문서명</td><td>FoodLog 와이어프레임</td></tr>
+      <tr><td>작성 목적</td><td>FoodLog의 주요 화면 구조와 사용자 흐름을 간단히 시각화하기 위함</td></tr>
+      <tr><td>기준 문서</td><td>FoodLog PRD, 요구사항 정의서, 사용자 시나리오</td></tr>
+      <tr><td>화면 기준</td><td>모바일 화면 기준</td></tr>
+      <tr><td>프로젝트 단계</td><td>프로젝트 초기 기획 및 화면 설계 단계</td></tr>
+    </table>
+    <p>본 문서는 FoodLog 웹 서비스의 주요 화면을 모바일 우선 관점에서 와이어프레임 형태로 정리한 문서이다.</p>
+    <p>FoodLog는 PC와 모바일 브라우저에서 사용할 수 있으며, 초기 화면 설계는 모바일 사용성을 우선하여 모바일 화면 기준으로 구성한다.</p>
+
+    <h2>2. 전체 화면 구성</h2>
+    <table>
+      <tr><th>번호</th><th>화면명</th><th>주요 목적</th></tr>
+      <tr><td>1</td><td>음식 기록 목록 화면</td><td>등록된 음식 기록을 목록으로 확인</td></tr>
+      <tr><td>2</td><td>음식 기록 추가 화면</td><td>새로운 음식 기록 입력 및 저장</td></tr>
+      <tr><td>3</td><td>음식 기록 상세/수정 화면</td><td>선택한 기록의 상세 확인, 수정, 삭제</td></tr>
+      <tr><td>4</td><td>식단 피드백 화면</td><td>기록된 음식 데이터를 바탕으로 간단한 피드백 확인</td></tr>
+    </table>
+
+    <h2>3. 음식 기록 목록 화면</h2>
+    <h3>화면 목적</h3>
+    <p>사용자가 등록한 음식 기록을 한눈에 확인하는 메인 화면이다. 음식 기록 추가, 상세 확인, 식단 피드백 화면으로 이동하는 출발점 역할을 한다.</p>
+    <h3>주요 구성 요소</h3>
+    <table><tr><th>구성 요소</th><th>설명</th></tr><tr><td>상단 제목</td><td>서비스명 FoodLog 표시</td></tr><tr><td>화면 제목</td><td>오늘의 음식 기록 또는 음식 기록 목록 표시</td></tr><tr><td>음식 추가 버튼</td><td>음식 기록 추가 화면으로 이동</td></tr><tr><td>피드백 보기 버튼</td><td>식단 피드백 화면으로 이동</td></tr><tr><td>음식 기록 카드</td><td>음식 이름, 카테고리, 칼로리, 메모 요약 표시</td></tr></table>
+    <h3>사용자 행동</h3>
+    <table><tr><th>사용자 행동</th><th>결과</th></tr><tr><td>음식 추가 버튼 선택</td><td>음식 기록 추가 화면으로 이동</td></tr><tr><td>피드백 보기 버튼 선택</td><td>식단 피드백 화면으로 이동</td></tr><tr><td>음식 기록 카드 선택</td><td>음식 기록 상세/수정 화면으로 이동</td></tr></table>
+    <h3>모바일 화면 와이어프레임</h3>
+    <div class="wireframe-phone">
+      <div class="wf-header">FoodLog</div>
+      <div class="wf-screen">
+        <div class="wf-title">오늘의 음식 기록</div>
+        <div class="wf-actions">
+          <div class="wf-button">+ 음식 추가</div>
+          <div class="wf-button secondary">피드백 보기</div>
+        </div>
+        <div class="wf-list">
+          <div class="wf-card">
+            <div class="wf-card-head">
+              <strong>사과</strong>
+              <span class="wf-badge">과일</span>
+            </div>
+            <span class="wf-kcal">95 kcal</span>
+            <span class="wf-note">오후 간식으로 먹음</span>
+          </div>
+          <div class="wf-card">
+            <div class="wf-card-head">
+              <strong>밥</strong>
+              <span class="wf-badge">곡류</span>
+            </div>
+            <span class="wf-kcal">206 kcal</span>
+            <span class="wf-note">점심으로 먹음</span>
+          </div>
+          <div class="wf-card">
+            <div class="wf-card-head">
+              <strong>달걀</strong>
+              <span class="wf-badge">단백질</span>
+            </div>
+            <span class="wf-kcal">78 kcal</span>
+            <span class="wf-note">아침으로 먹음</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>4. 음식 기록 추가 화면</h2>
+    <h3>화면 목적</h3>
+    <p>사용자가 먹은 음식을 새 기록으로 입력하고 저장하는 화면이다. 입력 항목은 음식 이름, 카테고리, 칼로리, 메모로 단순하게 구성한다.</p>
+    <h3>주요 구성 요소</h3>
+    <table><tr><th>구성 요소</th><th>설명</th></tr><tr><td>상단 제목</td><td>FoodLog 표시</td></tr><tr><td>화면 제목</td><td>음식 기록 추가 표시</td></tr><tr><td>음식 이름 입력란</td><td>사용자가 먹은 음식 이름 입력</td></tr><tr><td>카테고리 입력란</td><td>음식 종류 또는 분류 입력</td></tr><tr><td>칼로리 입력란</td><td>음식 칼로리 입력</td></tr><tr><td>메모 입력란</td><td>간단한 메모 입력</td></tr><tr><td>저장 버튼</td><td>입력한 음식 정보를 새 기록으로 저장</td></tr><tr><td>취소 버튼</td><td>입력을 취소하고 목록 화면으로 이동</td></tr></table>
+    <h3>모바일 화면 와이어프레임</h3>
+    <div class="wireframe-phone">
+      <div class="wf-header">FoodLog</div>
+      <div class="wf-screen">
+        <div class="wf-title">음식 기록 추가</div>
+        <div class="wf-form">
+          <div class="wf-field">
+            <label>음식 이름</label>
+            <div class="wf-input">사과</div>
+          </div>
+          <div class="wf-field">
+            <label>카테고리</label>
+            <div class="wf-input">과일</div>
+          </div>
+          <div class="wf-field">
+            <label>칼로리</label>
+            <div class="wf-input">95</div>
+          </div>
+          <div class="wf-field">
+            <label>메모</label>
+            <div class="wf-input multiline">오후 간식으로 먹음</div>
+          </div>
+        </div>
+        <div class="wf-actions">
+          <div class="wf-button">저장하기</div>
+          <div class="wf-button secondary">취소</div>
+        </div>
+      </div>
+    </div>
+
+    <h2>5. 음식 기록 상세/수정 화면</h2>
+    <h3>화면 목적</h3>
+    <p>사용자가 선택한 음식 기록의 상세 정보를 확인하고, 필요한 경우 내용을 수정하거나 삭제하는 화면이다.</p>
+    <h3>주요 구성 요소</h3>
+    <table><tr><th>구성 요소</th><th>설명</th></tr><tr><td>상단 제목</td><td>FoodLog 표시</td></tr><tr><td>화면 제목</td><td>음식 기록 상세 표시</td></tr><tr><td>음식 이름 입력란</td><td>선택한 음식 이름 표시 및 수정</td></tr><tr><td>카테고리 입력란</td><td>선택한 음식 카테고리 표시 및 수정</td></tr><tr><td>칼로리 입력란</td><td>선택한 음식 칼로리 표시 및 수정</td></tr><tr><td>메모 입력란</td><td>선택한 음식 메모 표시 및 수정</td></tr><tr><td>기록 일시</td><td>음식 기록 일시 표시</td></tr><tr><td>저장 버튼</td><td>수정한 내용을 저장</td></tr><tr><td>삭제 버튼</td><td>선택한 음식 기록 삭제</td></tr><tr><td>목록 버튼</td><td>음식 기록 목록 화면으로 이동</td></tr></table>
+    <h3>모바일 화면 와이어프레임</h3>
+    <div class="wireframe-phone">
+      <div class="wf-header">FoodLog</div>
+      <div class="wf-screen">
+        <div class="wf-title">음식 기록 상세</div>
+        <div class="wf-form">
+          <div class="wf-field">
+            <label>음식 이름</label>
+            <div class="wf-input">사과</div>
+          </div>
+          <div class="wf-field">
+            <label>카테고리</label>
+            <div class="wf-input">과일</div>
+          </div>
+          <div class="wf-field">
+            <label>칼로리</label>
+            <div class="wf-input">95</div>
+          </div>
+          <div class="wf-field">
+            <label>메모</label>
+            <div class="wf-input multiline">오후 간식으로 먹음</div>
+          </div>
+          <div class="wf-info">
+            <strong>기록 일시</strong>
+            <span>오전 11:09</span>
+          </div>
+        </div>
+        <div class="wf-actions three">
+          <div class="wf-button">저장하기</div>
+          <div class="wf-button secondary">삭제</div>
+          <div class="wf-button secondary">목록</div>
+        </div>
+      </div>
+    </div>
+
+    <h2>6. 식단 피드백 화면</h2>
+    <h3>화면 목적</h3>
+    <p>사용자가 기록한 음식 데이터를 바탕으로 간단한 식단 피드백을 확인하는 화면이다. 현재 MVP에서는 AI 분석이 아닌 규칙 기반 피드백을 제공한다.</p>
+    <h3>주요 구성 요소</h3>
+    <table><tr><th>구성 요소</th><th>설명</th></tr><tr><td>상단 제목</td><td>FoodLog 표시</td></tr><tr><td>화면 제목</td><td>식단 피드백 표시</td></tr><tr><td>총 기록 수</td><td>등록된 음식 기록 개수 표시</td></tr><tr><td>총 칼로리</td><td>기록된 음식의 칼로리 합계 표시</td></tr><tr><td>카테고리 요약</td><td>음식 카테고리별 기록 현황 표시</td></tr><tr><td>피드백 메시지</td><td>규칙 기반 식단 피드백 표시</td></tr><tr><td>목록 버튼</td><td>음식 기록 목록 화면으로 이동</td></tr></table>
+    <h3>모바일 화면 와이어프레임</h3>
+    <div class="wireframe-phone">
+      <div class="wf-header">FoodLog</div>
+      <div class="wf-screen">
+        <div class="wf-title">식단 피드백</div>
+        <div class="wf-info-grid">
+          <div class="wf-info">
+            <strong>총 기록 수</strong>
+            <span>3개</span>
+          </div>
+          <div class="wf-info">
+            <strong>총 칼로리</strong>
+            <span>379 kcal</span>
+          </div>
+          <div class="wf-info">
+            <strong>카테고리 요약</strong>
+            <span>과일: 1 / 곡류: 1 / 단백질: 1</span>
+          </div>
+        </div>
+        <div class="wf-feedback">
+          <strong>피드백</strong>
+          <span>다양한 카테고리의 음식이 기록되어 있습니다.</span>
+          <span>꾸준히 식사 후 기록해보세요.</span>
+        </div>
+        <div class="wf-actions single">
+          <div class="wf-button">목록으로</div>
+        </div>
+      </div>
+    </div>
+
+    <h2>7. 전체 화면 이동 요약</h2>
+    <table>
+      <tr><th>시작 화면</th><th>사용자 행동</th><th>이동 화면</th></tr>
+      <tr><td>음식 기록 목록 화면</td><td>음식 추가 선택</td><td>음식 기록 추가 화면</td></tr>
+      <tr><td>음식 기록 추가 화면</td><td>저장 또는 취소</td><td>음식 기록 목록 화면</td></tr>
+      <tr><td>음식 기록 목록 화면</td><td>음식 기록 선택</td><td>음식 기록 상세/수정 화면</td></tr>
+      <tr><td>음식 기록 상세/수정 화면</td><td>목록 또는 삭제 선택</td><td>음식 기록 목록 화면</td></tr>
+      <tr><td>음식 기록 목록 화면</td><td>피드백 보기 선택</td><td>식단 피드백 화면</td></tr>
+      <tr><td>식단 피드백 화면</td><td>목록 선택</td><td>음식 기록 목록 화면</td></tr>
+    </table>
+
+    <h2>8. 한 줄 요약</h2>
+    <section class="summary-card">
+      <strong>요약</strong>
+      FoodLog는 PC와 모바일 브라우저에서 사용할 수 있는 웹 서비스이며, 초기 화면 설계는 모바일 사용성을 우선하여 음식 기록 목록을 중심으로 추가, 상세/수정, 피드백 화면으로 이동하는 단순한 구조로 설계한다.
+    </section>
+  </main>
+</body>
+</html>

@@ -1,16 +1,60 @@
-# React + Vite
+# FoodLog
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+FoodLog는 사용자가 먹은 음식을 간단히 기록하고, 기록된 데이터를 바탕으로 식단 피드백을 확인할 수 있는 MVP 웹 애플리케이션입니다. 프론트엔드는 React와 Vite로 구성되어 있으며, 백엔드는 Express 기반의 인메모리 API로 동작합니다.
 
-Currently, two official plugins are available:
+## 주요 기능
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- 음식 기록 목록 조회
+- 음식 기록 추가
+- 음식 기록 상세 조회
+- 음식 기록 수정 및 삭제
+- 총 기록 수, 총 칼로리, 카테고리 요약 기반 식단 피드백 확인
 
-## React Compiler
+## 기술 스택
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Frontend: React, Vite
+- Backend: Express
+- Styling: CSS
+- Lint: ESLint
 
-## Expanding the ESLint configuration
+## 실행 방법
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+의존성을 설치합니다.
+
+```bash
+npm install
+```
+
+백엔드 API 서버를 실행합니다.
+
+```bash
+npm run server
+```
+
+다른 터미널에서 프론트엔드 개발 서버를 실행합니다.
+
+```bash
+npm run dev
+```
+
+Vite 개발 서버는 `/api` 요청을 `http://localhost:3000` 백엔드 서버로 프록시합니다.
+
+## 백엔드 API 목록
+
+| Method | Endpoint | 설명 |
+| --- | --- | --- |
+| GET | `/foods` | 음식 기록 목록 조회 |
+| GET | `/foods/:id` | 음식 기록 상세 조회 |
+| POST | `/foods` | 음식 기록 추가 |
+| PUT | `/foods/:id` | 음식 기록 수정 |
+| DELETE | `/foods/:id` | 음식 기록 삭제 |
+| GET | `/feedback` | 식단 피드백 조회 |
+
+## 기획 문서
+
+- [FoodLog PRD](docs/01_FoodLog_PRD.md)
+- [FoodLog 요구사항 정의서](docs/02_FoodLog_Requirements.md)
+- [FoodLog 사용자 시나리오](docs/03_FoodLog_UserScenario.md)
+- [FoodLog 와이어프레임](docs/04_FoodLog_Wireframe.md)
+
+HTML 문서는 `docs/html` 경로에서 확인할 수 있습니다. PDF 문서가 추가되는 경우 `docs/pdf` 경로에서 확인하면 됩니다.

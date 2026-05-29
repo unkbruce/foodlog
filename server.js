@@ -9,15 +9,31 @@ app.use(express.json());
 let foodList = [
   {
     id: 1,
-    name: 'Apple',
-    category: 'Fruit',
+    name: '사과',
+    category: '과일',
     calories: 95,
-    memo: 'Good afternoon snack',
+    memo: '오후 간식으로 먹음',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 2,
+    name: '밥',
+    category: '주식',
+    calories: 310,
+    memo: '점심 식사로 먹음',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 3,
+    name: '달걀',
+    category: '단백질',
+    calories: 80,
+    memo: '아침에 삶은 달걀로 먹음',
     createdAt: new Date().toISOString(),
   },
 ];
 
-let nextId = 2;
+let nextId = 4;
 
 // Keep error responses consistent across every API route.
 const sendError = (res, status, message) => {
